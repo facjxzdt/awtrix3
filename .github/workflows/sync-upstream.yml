@@ -20,7 +20,7 @@ jobs:
 
     - name: Add Upstream Remote
       run: |
-        git remote add upstream https://github.com/original_owner/original_repo.git
+        git remote add upstream https://github.com/Blueforcer/awtrix3.git
         git fetch upstream
 
     - name: Merge Upstream Changes
