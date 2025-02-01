@@ -3,7 +3,7 @@ name: Sync Upstream
 on:
   schedule:
     - cron: '0 0 * * *'  # 每天UTC时间0点自动执行
-  workflow_dispatch:     # 支持手动触发
+  workflow_dispatch:
 
 jobs:
   sync-and-modify:
@@ -20,7 +20,7 @@ jobs:
 
     - name: Add Upstream Remote
       run: |
-        git remote add upstream https://github.com/Blueforcer/awtrix3.git
+        git remote add upstream https://github.com/original_owner/original_repo.git
         git fetch upstream
 
     - name: Merge Upstream Changes
@@ -31,19 +31,26 @@ jobs:
 
     - name: Modify DisplayManager.cpp
       run: |
-        sed -i '/case 2:/,/break;/ {
-          /break;/a\
+        # 使用更稳健的sed语法
+        sed -i '/case 2:/ {
+            :loop
+            N
+            /break;/!b loop
+            a\
             case 3:\\
-              matrix = new FastLED_NeoMatrix(leds, 32, 8, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE);\\
-              break;\\
+                matrix = new FastLED_NeoMatrix(leds, 32, 8, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE);\\
+                break;\\
             case 4:\\
-              matrix = new FastLED_NeoMatrix(leds, 32, 8, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_PROGRESSIVE);\\
-              break;
-        }' src/DisplayManager.cpp
+                matrix = new FastLED_NeoMatrix(leds, 32, 8, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_PROGRESSIVE);\\
+                break;
+                    }' src/DisplayManager.cpp
+
+    - name: Verify Modification
+      run: grep -A5 'case 3:' src/DisplayManager.cpp || (echo "修改未成功！"; exit 1)
 
     - name: Commit Changes
       if: success()
       run: |
         git add src/DisplayManager.cpp
-        git diff --quiet && git diff --staged --quiet || git commit -m "Add new matrix configurations"
+        git diff --quiet && git diff --staged --quiet || git commit -m "Add case 3 & 4 matrix configurations"
         git push origin main
